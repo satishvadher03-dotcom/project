@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Globe,
   ShieldCheck,
@@ -16,6 +16,8 @@ import {
   Lock,
   Briefcase,
   Sliders,
+  Home,
+  Plane,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { UserRole } from '../types/visa.ts';
@@ -31,6 +33,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
   const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileDashboardOpen, setMobileDashboardOpen] = useState(false);
+
+  // Visa Services Dropdown Toggle State (Home, Visa Types, AI Eligibility, Apply eVisa)
+  const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const servicesDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        servicesDropdownRef.current &&
+        !servicesDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsServicesMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isServicesActive = ['home', 'visas', 'eligibility', 'apply', 'consultant'].includes(currentPage);
 
   const handleSignOut = async () => {
     await signOutUser();
@@ -165,67 +187,235 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             </div>
           </div>
 
-          {/* Desktop Nav Items */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            <button
-              onClick={() => onNavigate('home')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                currentPage === 'home' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              Home
-            </button>
+          {/* Right-Side Controls: Both Dropdown Toggles + Sign In / Logout */}
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-2.5">
+            {/* 1. Visa Services Dropdown Toggle (Home, Visa Types, AI Eligibility, Apply eVisa, Book Lawyer) */}
+            <div className="relative" ref={servicesDropdownRef}>
+              <button
+                onClick={() => setIsServicesMenuOpen(!isServicesMenuOpen)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-2 border ${
+                  isServicesActive
+                    ? 'bg-blue-50/80 text-blue-700 border-blue-200 shadow-xs'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-transparent hover:border-slate-200'
+                }`}
+                aria-expanded={isServicesMenuOpen}
+                title="Visa Services & Navigation Menu"
+              >
+                <Compass className="w-4 h-4 text-blue-600" />
+                <span>Visa Services</span>
+                {isServicesActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                )}
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${
+                    isServicesMenuOpen ? 'rotate-180 text-blue-600' : ''
+                  }`}
+                />
+              </button>
 
-            <button
-              onClick={() => onNavigate('visas')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                currentPage === 'visas' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              Visa Types
-            </button>
+              {isServicesMenuOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-600 uppercase tracking-wider border-b border-slate-100 mb-1 flex items-center justify-between">
+                    <span>Visa & Legal Services</span>
+                    <span className="text-[10px] text-blue-600 font-semibold">5 Services</span>
+                  </div>
 
-            <button
-              onClick={() => onNavigate('eligibility')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
-                currentPage === 'eligibility' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>AI Eligibility</span>
-            </button>
+                  {/* 1. Home */}
+                  <button
+                    onClick={() => {
+                      onNavigate('home');
+                      setIsServicesMenuOpen(false);
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl text-xs flex items-start space-x-3 transition group ${
+                      currentPage === 'home'
+                        ? 'bg-blue-50 text-blue-800 font-bold'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg shrink-0 ${
+                        currentPage === 'home'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 transition'
+                      }`}
+                    >
+                      <Home className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition">
+                          Home
+                        </span>
+                        {currentPage === 'home' && (
+                          <span className="text-[10px] text-blue-600 font-bold">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
+                        Consular overview & queue tracker
+                      </p>
+                    </div>
+                  </button>
 
-            <button
-              onClick={() => onNavigate('apply')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                currentPage === 'apply' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              Apply eVisa
-            </button>
+                  {/* 2. Visa Types */}
+                  <button
+                    onClick={() => {
+                      onNavigate('visas');
+                      setIsServicesMenuOpen(false);
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl text-xs flex items-start space-x-3 transition group ${
+                      currentPage === 'visas'
+                        ? 'bg-blue-50 text-blue-800 font-bold'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg shrink-0 ${
+                        currentPage === 'visas'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 transition'
+                      }`}
+                    >
+                      <Compass className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition">
+                          Visa Types
+                        </span>
+                        {currentPage === 'visas' && (
+                          <span className="text-[10px] text-blue-600 font-bold">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
+                        Browse 15+ tourist, business & nomad visas
+                      </p>
+                    </div>
+                  </button>
 
-            <button
-              onClick={() => onNavigate('consultant')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
-                currentPage === 'consultant' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5 text-slate-600" />
-              <span>Book Lawyer</span>
-            </button>
+                  {/* 3. AI Eligibility */}
+                  <button
+                    onClick={() => {
+                      onNavigate('eligibility');
+                      setIsServicesMenuOpen(false);
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl text-xs flex items-start space-x-3 transition group ${
+                      currentPage === 'eligibility'
+                        ? 'bg-blue-50 text-blue-800 font-bold'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg shrink-0 ${
+                        currentPage === 'eligibility'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 transition'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition">
+                          AI Eligibility
+                        </span>
+                        {currentPage === 'eligibility' && (
+                          <span className="text-[10px] text-blue-600 font-bold">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
+                        Instant approval diagnostic & score
+                      </p>
+                    </div>
+                  </button>
 
-            {/* Unified Password-Protected Dashboards Dropdown Drawer */}
+                  {/* 4. Apply eVisa */}
+                  <button
+                    onClick={() => {
+                      onNavigate('apply');
+                      setIsServicesMenuOpen(false);
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl text-xs flex items-start space-x-3 transition group ${
+                      currentPage === 'apply'
+                        ? 'bg-blue-50 text-blue-800 font-bold'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg shrink-0 ${
+                        currentPage === 'apply'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 transition'
+                      }`}
+                    >
+                      <Plane className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition">
+                          Apply eVisa
+                        </span>
+                        {currentPage === 'apply' && (
+                          <span className="text-[10px] text-blue-600 font-bold">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
+                        4-step application with OCR scanner
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 5. Book Lawyer */}
+                  <button
+                    onClick={() => {
+                      onNavigate('consultant');
+                      setIsServicesMenuOpen(false);
+                    }}
+                    className={`w-full text-left p-2.5 rounded-xl text-xs flex items-start space-x-3 transition group ${
+                      currentPage === 'consultant'
+                        ? 'bg-blue-50 text-blue-800 font-bold'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg shrink-0 ${
+                        currentPage === 'consultant'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700 transition'
+                      }`}
+                    >
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition">
+                          Book Lawyer
+                        </span>
+                        {currentPage === 'consultant' && (
+                          <span className="text-[10px] text-blue-600 font-bold">Active</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
+                        Licensed attorneys & encrypted video sessions
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Unified Password-Protected Dashboards Dropdown Drawer */}
             <DashboardSecurityDrawer
               currentPage={currentPage}
               onNavigate={onNavigate}
               userRole={role}
             />
-          </nav>
 
-          {/* User profile / login actions */}
-          <div className="hidden md:flex items-center space-x-3">
+            {/* Vertical Divider */}
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+
+            {/* 3. User profile / login actions */}
             {user ? (
-              <div className="flex items-center space-x-2.5 pl-3 border-l border-slate-200">
+              <div className="flex items-center space-x-2.5">
                 <div
                   onClick={() => {
                     if (role === 'officer' || role === 'admin') onNavigate('admin-dashboard');
@@ -284,46 +474,98 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
       {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg">
-          <button
-            onClick={() => {
-              onNavigate('home');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Globe className="w-4 h-4 text-slate-600" />
-            <span>Home</span>
-          </button>
-          <button
-            onClick={() => {
-              onNavigate('visas');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Compass className="w-4 h-4 text-slate-600" />
-            <span>Visa Types Directory</span>
-          </button>
-          <button
-            onClick={() => {
-              onNavigate('eligibility');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span>AI Eligibility Checker</span>
-          </button>
-          <button
-            onClick={() => {
-              onNavigate('apply');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <FileText className="w-4 h-4 text-slate-600" />
-            <span>Apply eVisa</span>
-          </button>
+          {/* Mobile Visa Services Dropdown Toggle Accordion */}
+          <div className="border-b border-slate-100 pb-2 mb-1">
+            <button
+              onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-800 bg-slate-50 hover:bg-slate-100 transition"
+            >
+              <div className="flex items-center space-x-2.5">
+                <Compass className="w-4 h-4 text-blue-600" />
+                <span>Visa Services & Applications</span>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${
+                  mobileServicesOpen ? 'rotate-180 text-blue-600' : ''
+                }`}
+              />
+            </button>
+
+            {mobileServicesOpen && (
+              <div className="pl-3 pr-1 pt-1.5 space-y-1 animate-in fade-in duration-150">
+                <button
+                  onClick={() => {
+                    onNavigate('home');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium ${
+                    currentPage === 'home'
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Home className="w-4 h-4 text-slate-500" />
+                  <span>Home Portal</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('visas');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium ${
+                    currentPage === 'visas'
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Compass className="w-4 h-4 text-slate-500" />
+                  <span>Visa Types Directory</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('eligibility');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium ${
+                    currentPage === 'eligibility'
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <span>AI Eligibility Checker</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('apply');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium ${
+                    currentPage === 'apply'
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Plane className="w-4 h-4 text-slate-500" />
+                  <span>Apply eVisa</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('consultant');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium ${
+                    currentPage === 'consultant'
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 text-slate-500" />
+                  <span>Book Lawyer</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Password-protected dashboards in mobile */}
           <div className="pt-2 pb-1 border-t border-slate-100">
