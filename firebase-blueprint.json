@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access credentials",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["applicant", "officer", "consultant", "admin"] },
+        "nationality": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "eVisa application with traveler info, AI verification scores, and decision timeline",
+      "type": "object",
+      "properties": {
+        "applicantId": { "type": "string" },
+        "applicantName": { "type": "string" },
+        "applicantEmail": { "type": "string", "format": "email" },
+        "destinationCountry": { "type": "string" },
+        "visaType": { "type": "string" },
+        "passportNumber": { "type": "string" },
+        "passportExpiry": { "type": "string" },
+        "travelDate": { "type": "string" },
+        "returnDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "submitted", "under_review", "action_required", "approved", "rejected"] },
+        "aiVerificationScore": { "type": "number" },
+        "aiEstimatedDays": { "type": "number" },
+        "aiEstimatedDate": { "type": "string" },
+        "aiRiskLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+        "officerNotes": { "type": "string" },
+        "actionRequiredReason": { "type": "string" },
+        "feeAmount": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["unpaid", "paid"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["applicantId", "destinationCountry", "visaType", "status"]
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "description": "Booked consultation appointment with licensed immigration expert",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string", "format": "email" },
+        "consultantId": { "type": "string" },
+        "consultantName": { "type": "string" },
+        "consultantSpecialty": { "type": "string" },
+        "dateTime": { "type": "string" },
+        "duration": { "type": "number" },
+        "topic": { "type": "string" },
+        "meetingType": { "type": "string", "enum": ["video", "phone"] },
+        "status": { "type": "string", "enum": ["scheduled", "completed", "cancelled"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "consultantId", "dateTime", "topic", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles partitioned by Auth UID"
+    },
+    "/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/Application" },
+      "description": "Visa applications for travelers and officers"
+    },
+    "/consultations/{consultationId}": {
+      "schema": { "$ref": "#/entities/Consultation" },
+      "description": "Immigration advisory bookings"
+    }
+  }
+}

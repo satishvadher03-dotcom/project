@@ -1,0 +1,8 @@
+{
+  "name": "AuraVisa - AI-Powered Global eVisa & Immigration Platform",
+  "description": "Intelligent electronic visa application portal featuring instant AI document verification, automated status updates, predictive processing time estimates, eligibility diagnostics, and consultant booking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

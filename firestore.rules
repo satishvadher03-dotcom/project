@@ -1,0 +1,82 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOfficerOrAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'cricnow35@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['officer', 'admin']))
+      );
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isOfficerOrAdmin());
+      allow create: if isSignedIn() && isOwner(userId) && isValidId(userId);
+      allow update: if isSignedIn() && (isOwner(userId) || isOfficerOrAdmin());
+      allow delete: if isOfficerOrAdmin();
+    }
+
+    // Visa Applications
+    match /applications/{applicationId} {
+      allow read: if isSignedIn() && (
+        resource.data.applicantId == request.auth.uid ||
+        isOfficerOrAdmin()
+      );
+
+      allow create: if isSignedIn() && isValidId(applicationId) && (
+        request.resource.data.applicantId == request.auth.uid ||
+        isOfficerOrAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        (resource.data.applicantId == request.auth.uid) ||
+        isOfficerOrAdmin()
+      );
+
+      allow delete: if isOfficerOrAdmin();
+    }
+
+    // Consultations bookings
+    match /consultations/{consultationId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.consultantId == request.auth.uid ||
+        isOfficerOrAdmin()
+      );
+
+      allow create: if isSignedIn() && isValidId(consultationId) && (
+        request.resource.data.userId == request.auth.uid ||
+        isOfficerOrAdmin()
+      );
+
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.consultantId == request.auth.uid ||
+        isOfficerOrAdmin()
+      );
+
+      allow delete: if isOfficerOrAdmin();
+    }
+  }
+}
