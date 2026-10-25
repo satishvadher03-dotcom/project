@@ -15,10 +15,11 @@ import {
   X,
   Lock,
   Briefcase,
-  User,
+  Sliders,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { UserRole } from '../types/visa.ts';
+import { DashboardSecurityDrawer, DASHBOARD_PASSWORDS, DashboardType } from './DashboardSecurityDrawer.tsx';
 
 interface NavbarProps {
   currentPage: string;
@@ -29,10 +30,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
   const { user, role, isOfficerOrAdmin, switchRole, signOutUser } = useAuth();
   const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileDashboardOpen, setMobileDashboardOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOutUser();
     onNavigate('login');
+  };
+
+  const isDashboardUnlocked = (type: DashboardType): boolean => {
+    return sessionStorage.getItem(`auravisa_unlocked_${type}`) === 'true';
+  };
+
+  const handleMobileDashboardClick = (type: DashboardType) => {
+    setIsMobileMenuOpen(false);
+    if (type === 'applicant') onNavigate('dashboard');
+    else if (type === 'consultant') onNavigate('consultant-dashboard');
+    else if (type === 'admin') onNavigate('admin-dashboard');
   };
 
   return (
@@ -48,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           <span className="hidden sm:inline text-slate-300">ICAO Doc 9303 Compliant Machine-Readable eVisa</span>
         </div>
 
-        {/* Quick Role Switcher for instant RBAC demo testing */}
+        {/* Quick Role Switcher */}
         <div className="flex items-center space-x-2">
           <span className="text-slate-400 text-[11px]">
             {user ? 'Active Persona:' : 'Test Personas:'}
@@ -153,11 +166,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           </div>
 
           {/* Desktop Nav Items */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
             <button
               onClick={() => onNavigate('home')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                currentPage === 'home' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
+                currentPage === 'home' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               Home
@@ -165,8 +178,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
 
             <button
               onClick={() => onNavigate('visas')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                currentPage === 'visas' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
+                currentPage === 'visas' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               Visa Types
@@ -174,8 +187,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
 
             <button
               onClick={() => onNavigate('eligibility')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
-                currentPage === 'eligibility' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
+                currentPage === 'eligibility' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
@@ -184,53 +197,33 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
 
             <button
               onClick={() => onNavigate('apply')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-                currentPage === 'apply' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition ${
+                currentPage === 'apply' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               Apply eVisa
             </button>
 
-            {/* Applicant Dashboard */}
             <button
-              onClick={() => onNavigate('dashboard')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
-                currentPage === 'dashboard' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              onClick={() => onNavigate('consultant')}
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
+                currentPage === 'consultant' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Traveler Dashboard</span>
+              <Calendar className="w-3.5 h-3.5 text-slate-600" />
+              <span>Book Lawyer</span>
             </button>
 
-            {/* Consultant Dashboard */}
-            <button
-              onClick={() => onNavigate('consultant-dashboard')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
-                currentPage === 'consultant-dashboard'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Consultant Dashboard</span>
-            </button>
-
-            {/* Admin Dashboard */}
-            <button
-              onClick={() => onNavigate('admin-dashboard')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1 ${
-                currentPage === 'admin' || currentPage === 'admin-dashboard'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-200'
-              }`}
-            >
-              <Lock className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Admin Dashboard</span>
-            </button>
+            {/* Unified Password-Protected Dashboards Dropdown Drawer */}
+            <DashboardSecurityDrawer
+              currentPage={currentPage}
+              onNavigate={onNavigate}
+              userRole={role}
+            />
           </nav>
 
           {/* User profile / login actions */}
-          <div className="hidden lg:flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <div className="flex items-center space-x-2.5 pl-3 border-l border-slate-200">
                 <div
@@ -277,7 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           </div>
 
           {/* Mobile hamburger */}
-          <div className="flex lg:hidden">
+          <div className="flex md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -290,7 +283,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
 
       {/* Mobile menu dropdown */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg">
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg">
           <button
             onClick={() => {
               onNavigate('home');
@@ -331,36 +324,43 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             <FileText className="w-4 h-4 text-slate-600" />
             <span>Apply eVisa</span>
           </button>
-          <button
-            onClick={() => {
-              onNavigate('dashboard');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Traveler Dashboard</span>
-          </button>
-          <button
-            onClick={() => {
-              onNavigate('consultant-dashboard');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800"
-          >
-            <Briefcase className="w-4 h-4" />
-            <span>Consultant Dashboard</span>
-          </button>
-          <button
-            onClick={() => {
-              onNavigate('admin-dashboard');
-              setIsMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-800"
-          >
-            <Lock className="w-4 h-4" />
-            <span>Admin Dashboard</span>
-          </button>
+
+          {/* Password-protected dashboards in mobile */}
+          <div className="pt-2 pb-1 border-t border-slate-100">
+            <span className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+              Protected Dashboards (Password PIN Protected)
+            </span>
+            <button
+              onClick={() => handleMobileDashboardClick('applicant')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 mb-1"
+            >
+              <div className="flex items-center space-x-2">
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Traveler Dashboard</span>
+              </div>
+              <span className="text-[10px] font-mono text-blue-600">travel123</span>
+            </button>
+            <button
+              onClick={() => handleMobileDashboardClick('consultant')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 mb-1"
+            >
+              <div className="flex items-center space-x-2">
+                <Briefcase className="w-4 h-4" />
+                <span>Consultant Dashboard</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-600">counsel123</span>
+            </button>
+            <button
+              onClick={() => handleMobileDashboardClick('admin')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-800"
+            >
+              <div className="flex items-center space-x-2">
+                <Sliders className="w-4 h-4" />
+                <span>Admin Dashboard</span>
+              </div>
+              <span className="text-[10px] font-mono text-indigo-600">admin123</span>
+            </button>
+          </div>
 
           {user ? (
             <button

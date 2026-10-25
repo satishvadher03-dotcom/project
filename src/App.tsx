@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { DashboardSecurityProvider } from './context/DashboardSecurityContext.tsx';
+import { DashboardPasswordModal } from './components/DashboardPasswordModal.tsx';
 import { Navbar } from './components/Navbar.tsx';
 import { Footer } from './components/Footer.tsx';
 import { HomePage } from './pages/HomePage.tsx';
@@ -30,38 +32,43 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans selection:bg-blue-600 selection:text-white">
-        {/* Navigation Bar */}
-        <Navbar currentPage={currentPage} onNavigate={handleNavigate} />
+      <DashboardSecurityProvider>
+        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans selection:bg-blue-600 selection:text-white">
+          {/* Global Dashboard Password Gate Modal */}
+          <DashboardPasswordModal />
 
-        {/* Dynamic Page Content */}
-        <main className="flex-1">
-          {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
-          {currentPage === 'visas' && (
-            <VisaTypesPage onNavigate={handleNavigate} initialSearch={navParams?.search} />
-          )}
-          {currentPage === 'eligibility' && (
-            <EligibilityCheckerPage onNavigate={handleNavigate} initialParams={navParams} />
-          )}
-          {currentPage === 'apply' && (
-            <ApplicationFormPage onNavigate={handleNavigate} initialVisaId={navParams?.visaId} />
-          )}
-          {currentPage === 'dashboard' && <DashboardPage onNavigate={handleNavigate} />}
-          {currentPage === 'consultant-dashboard' && (
-            <ConsultantDashboardPage onNavigate={handleNavigate} />
-          )}
-          {currentPage === 'consultant' && <BookConsultantPage onNavigate={handleNavigate} />}
-          {(currentPage === 'admin' || currentPage === 'admin-dashboard') && (
-            <AdminDashboardPage onNavigate={handleNavigate} />
-          )}
-          {(currentPage === 'login' || currentPage === 'logout') && (
-            <LoginPage onNavigate={handleNavigate} isLogoutMode={currentPage === 'logout'} />
-          )}
-        </main>
+          {/* Navigation Bar with Dropdown Drawer */}
+          <Navbar currentPage={currentPage} onNavigate={handleNavigate} />
 
-        {/* Global Diplomatic Footer */}
-        <Footer onNavigate={handleNavigate} />
-      </div>
+          {/* Dynamic Page Content */}
+          <main className="flex-1">
+            {currentPage === 'home' && <HomePage onNavigate={handleNavigate} />}
+            {currentPage === 'visas' && (
+              <VisaTypesPage onNavigate={handleNavigate} initialSearch={navParams?.search} />
+            )}
+            {currentPage === 'eligibility' && (
+              <EligibilityCheckerPage onNavigate={handleNavigate} initialParams={navParams} />
+            )}
+            {currentPage === 'apply' && (
+              <ApplicationFormPage onNavigate={handleNavigate} initialVisaId={navParams?.visaId} />
+            )}
+            {currentPage === 'dashboard' && <DashboardPage onNavigate={handleNavigate} />}
+            {currentPage === 'consultant-dashboard' && (
+              <ConsultantDashboardPage onNavigate={handleNavigate} />
+            )}
+            {currentPage === 'consultant' && <BookConsultantPage onNavigate={handleNavigate} />}
+            {(currentPage === 'admin' || currentPage === 'admin-dashboard') && (
+              <AdminDashboardPage onNavigate={handleNavigate} />
+            )}
+            {(currentPage === 'login' || currentPage === 'logout') && (
+              <LoginPage onNavigate={handleNavigate} isLogoutMode={currentPage === 'logout'} />
+            )}
+          </main>
+
+          {/* Global Diplomatic Footer */}
+          <Footer onNavigate={handleNavigate} />
+        </div>
+      </DashboardSecurityProvider>
     </AuthProvider>
   );
 }
